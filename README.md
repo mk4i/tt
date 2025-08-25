@@ -1,0 +1,1 @@
+Automaatne tunniplaani koostaja Tartu Erakool ProTERA 9. klassi jaoks.
