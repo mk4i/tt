@@ -4,7 +4,7 @@ async function fetchTimetable() {
 
   // The body is important — for public timetables, __args = [null, 2025], __gsh = "00000000"
   const body = JSON.stringify({
-    __args: [null, 2025],
+    __args: [null, new Date().getFullYear()],
     __gsh: "00000000",
   });
 
