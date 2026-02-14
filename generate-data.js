@@ -1,6 +1,6 @@
-import { post } from "axios";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
+const axios = require('axios');
+const { writeFileSync, existsSync, mkdirSync } = require('fs');
+const { join } = require('path');
 
 async function fetchTimetables(subDomain) {
 	const url = `https://${subDomain}.edupage.org/timetable/server/ttviewer.js?__func=getTTViewerData`;
@@ -11,7 +11,7 @@ async function fetchTimetables(subDomain) {
 	};
 
 	try {
-		const response = await post(url, body, {
+		const response = await axios.post(url, body, {
 			headers: {
 				"Content-Type": "application/json",
 				"Accept": "*/*",
@@ -35,7 +35,7 @@ async function fetchTimetableByID(timeTableID) {
 	};
 
 	try {
-		const response = await post(url, body, {
+		const response = await axios.post(url, body, {
 			headers: {
 				"Content-Type": "application/json",
 				"Accept": "*/*",
