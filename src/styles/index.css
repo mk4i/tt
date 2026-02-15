@@ -21,8 +21,13 @@ body {
 	color: var(--fg);
 	font-family: Inter, system-ui;
 	margin: 0 auto;
+	/*display: flex;
+	justify-content: center;
+	align-items: center;*/
 	min-width: 100vw;
+	/*overflow: hidden;*/
 	text-overflow: clip;
+	/*flex-direction: column;*/
 	font-size: 16px;
 	--qo: cubic-bezier(.25, 1, .5, 1); /* quadratic ease-out */
 	--qs: cubic-bezier(0.4, 0.1, 0.5, 1);
@@ -62,6 +67,24 @@ a {
 	min-width: 24rem;
 	width: 80%;
 	max-width: 32rem;
+}
+
+#share-warning {
+	position: relative;
+	padding: 1rem 2.5rem 1rem 1rem;
+}
+
+#share-warning .warning-close {
+	position: absolute;
+	top: 0.35rem;
+	right: 0.35rem;
+	min-width: 1.6rem;
+	width: 1.6rem;
+	height: 1.6rem;
+	padding: 0;
+	line-height: 1;
+	border-radius: 50%;
+	font-size: 1.2rem;
 }
 
 input {
@@ -114,6 +137,7 @@ input {
 
 .flex {
 	display: flex;
+	/*flex-direction: row;*/
 	flex-wrap: wrap;
 	gap: 0 .5rem;
 }
@@ -177,6 +201,92 @@ button:active {
 	scale: 0.985;
 }
 
+button:disabled {
+	color: var(--light-fg);
+	background: var(--gray-bg);
+	scale: 1;
+}
+
+button:disabled:hover {
+	background: var(--bg);
+	box-shadow: 0 0 0.75rem var(--ltrans);
+}
+
+input[type=range] {
+	padding: -5rem;
+	min-width: 12rem;
+	background-color: var(--dark);
+	height: .8rem;
+	outline: none;
+	border: #666 .1rem solid;
+	border-radius: .5rem;
+	margin: .5rem;
+}
+
+input[type=range]::-moz-range-thumb {
+	border: .05rem solid var(--gray);
+	height: .8rem;
+	width: .8rem;
+	transform: scale(2);
+	border-radius: .2rem;
+	background: #333;
+	cursor: pointer;
+	transition-duration: 100ms;
+}
+
+input[type=range]:active::-moz-range-thumb {
+	border: .05rem solid #888;
+	background-color: #444;
+}
+
+.slider {
+	position: relative;
+	min-width: min(var(--max-safe-width) - 1rem, 12rem);
+	max-width: calc(var(--max-safe-width) - 1rem);
+	height: .4rem;
+	border-radius: .2rem;
+	margin: 1rem;
+	user-select: none;
+	background: linear-gradient(to right, #000 0%, #fff 100%);
+}
+
+.slider p {
+	min-width: 1rem;
+	text-align: center;
+	transition: var(--qo) .2s;
+	translate: -50% calc(-50% + .2rem);
+	font-size: 1rem;
+	padding: 0 .36rem;
+	border-radius: 1rem;
+	position: absolute;
+	background: none;
+	backdrop-filter: blur(.2rem) brightness(var(--bg-brightness));
+	outline: var(--ltrans) outset .05rem;
+	cursor: grab;
+}
+
+.ril {
+	height: 0;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	width: 17.5rem;
+	position: relative;
+	top: -2.5rem;
+	user-select: none;
+}
+
+.ril div {
+	text-align: center;
+	height: 0;
+}
+
+.gradient-text {
+	background: linear-gradient(9rad, var(--c1), var(--c2));
+	background-clip: text;
+	color: transparent;
+}
+
 #tt {
 	font-family: Exo_2;
 	text-wrap: nowrap;
@@ -223,6 +333,18 @@ button:active {
 	text-align: center;
 }
 
+/*#tt time {
+	font-size: 1.6em;
+	rotate: -90deg;
+	text-align: center;
+	position: absolute;
+	translate: -50%;
+	top: calc(3.5 * var(--w));
+	line-height: 1em;
+	background: var(--bg);
+	padding: .1em .2em;
+}*/
+
 #tt .item {
 	text-align: center;
 	position: relative;
@@ -231,29 +353,32 @@ button:active {
 }
 
 #tt .item label {
+	padding: 0;
 	position: absolute;
 	translate: -50% -50%;
 	left: 50%;
 	top: 22%;
 	font-weight: 600;
-	font-size: 3em;
+	font-size: calc(3 * var(--w));
 }
 
 #tt .item time {
+	padding: 0;
 	position: absolute;
-	top: 58%;
-	font-size: 1.55em;
+	top: 59%;
+	font-size: calc(1.55 * var(--w));
 	left: 50%;
 	font-weight: 450;
 	translate: -50% -50%;
 }
 
 #tt .item .bottom {
+	padding: 0;
 	margin: 0;
 	position: absolute;
-	bottom: 6%;
-	font-size: 1.5em;
-	translate: -50% -50%;
+	bottom: 16%;
+	font-size: calc(1.5 * var(--w));
+	translate: -50%;
 	white-space: pre;
 	font-weight: 350;
 	line-height: 0;
