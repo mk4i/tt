@@ -2,6 +2,63 @@ const axios = require('axios');
 const { writeFileSync, existsSync, mkdirSync } = require('fs');
 const { join } = require('path');
 
+const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 30000);
+const REQUEST_RETRIES = Number(process.env.REQUEST_RETRIES || 3);
+const REQUEST_RETRY_BASE_DELAY_MS = Number(process.env.REQUEST_RETRY_BASE_DELAY_MS || 1000);
+
+const http = axios.create({
+	timeout: REQUEST_TIMEOUT_MS,
+	headers: {
+		"Content-Type": "application/json",
+		"Accept": "*/*",
+		"X-Requested-With": "XMLHttpRequest",
+		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+	}
+});
+
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldRetry(err) {
+	const retriableCodes = new Set([
+		"ECONNABORTED",
+		"ETIMEDOUT",
+		"ECONNRESET",
+		"EAI_AGAIN",
+		"ENOTFOUND",
+		"EHOSTUNREACH",
+		"ECONNREFUSED"
+	]);
+
+	if (err && retriableCodes.has(err.code)) return true;
+
+	const status = err?.response?.status;
+	return typeof status === "number" && status >= 500;
+}
+
+async function postWithRetry(url, body, context) {
+	for (let attempt = 1; attempt <= REQUEST_RETRIES + 1; attempt++) {
+		try {
+			const response = await http.post(url, body);
+			return response.data;
+		} catch (err) {
+			const canRetry = attempt <= REQUEST_RETRIES && shouldRetry(err);
+			const status = err?.response?.status;
+			const details = status ? `status ${status}` : (err.code || err.message);
+
+			if (!canRetry) {
+				console.error(`${context} failed (attempt ${attempt}/${REQUEST_RETRIES + 1}): ${details}`);
+				throw err;
+			}
+
+			const delayMs = REQUEST_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+			console.warn(`${context} retrying (attempt ${attempt}/${REQUEST_RETRIES + 1}) after ${delayMs}ms: ${details}`);
+			await sleep(delayMs);
+		}
+	}
+}
+
 async function fetchTimetables(subDomain) {
 	const url = `https://${subDomain}.edupage.org/timetable/server/ttviewer.js?__func=getTTViewerData`;
 
@@ -10,20 +67,7 @@ async function fetchTimetables(subDomain) {
 		__gsh: "00000000",
 	};
 
-	try {
-		const response = await axios.post(url, body, {
-			headers: {
-				"Content-Type": "application/json",
-				"Accept": "*/*",
-				"X-Requested-With": "XMLHttpRequest",
-				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-			}
-		});
-		return response.data;
-	} catch (err) {
-		console.error("fetchTimetables failed:", err);
-		throw err;
-	}
+	return postWithRetry(url, body, "fetchTimetables");
 }
 
 async function fetchTimetableByID(timeTableID) {
@@ -34,20 +78,7 @@ async function fetchTimetableByID(timeTableID) {
 		__gsh: "00000000",
 	};
 
-	try {
-		const response = await axios.post(url, body, {
-			headers: {
-				"Content-Type": "application/json",
-				"Accept": "*/*",
-				"X-Requested-With": "XMLHttpRequest",
-				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-			}
-		});
-		return response.data;
-	} catch (err) {
-		console.error("fetchTimetableByID failed:", err);
-		throw err;
-	}
+	return postWithRetry(url, body, `fetchTimetableByID(${timeTableID})`);
 }
 
 function sortTimetables(timetablesList) {

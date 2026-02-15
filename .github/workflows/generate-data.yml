@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: '1 0 * * 0'  # Run daily at midnight UTC
+    - cron: '1 0 * * 0'  # Run weekly on Sunday at 00:01 UTC
 
 jobs:
   generate-data:
@@ -23,9 +23,13 @@ jobs:
         node-version: '18'
 
     - name: Install dependencies
-      run: npm install axios
+      run: npm ci
 
     - name: Generate data
+      env:
+        REQUEST_TIMEOUT_MS: "45000"
+        REQUEST_RETRIES: "4"
+        REQUEST_RETRY_BASE_DELAY_MS: "1200"
       run: node generate-data.js
 
     - name: Commit and push changes
