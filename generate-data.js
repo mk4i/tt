@@ -1,13 +1,25 @@
 const axios = require('axios');
 const { writeFileSync, existsSync, mkdirSync } = require('fs');
 const { join } = require('path');
+const https = require('https');
 
 const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 30000);
 const REQUEST_RETRIES = Number(process.env.REQUEST_RETRIES || 3);
 const REQUEST_RETRY_BASE_DELAY_MS = Number(process.env.REQUEST_RETRY_BASE_DELAY_MS || 1000);
+const REQUEST_IP_FAMILY = Number(process.env.REQUEST_IP_FAMILY || 4);
+const ALLOW_STALE_DATA_ON_FAILURE =
+	process.env.ALLOW_STALE_DATA_ON_FAILURE
+		? process.env.ALLOW_STALE_DATA_ON_FAILURE === "true"
+		: process.env.GITHUB_ACTIONS === "true";
+
+const httpsAgent = new https.Agent({
+	keepAlive: true,
+	family: REQUEST_IP_FAMILY
+});
 
 const http = axios.create({
 	timeout: REQUEST_TIMEOUT_MS,
+	httpsAgent,
 	headers: {
 		"Content-Type": "application/json",
 		"Accept": "*/*",
@@ -218,7 +230,17 @@ async function main() {
 
 		console.log("Data generation complete");
 	} catch (err) {
-		console.error("Error:", err);
+		console.error("Error:", err.message || err);
+
+		const dataDir = join(__dirname, "data");
+		const hasExistingData = existsSync(dataDir);
+		if (ALLOW_STALE_DATA_ON_FAILURE && hasExistingData) {
+			console.warn(
+				"Upstream fetch failed. Keeping existing data/ and exiting successfully."
+			);
+			return;
+		}
+
 		process.exit(1);
 	}
 }
