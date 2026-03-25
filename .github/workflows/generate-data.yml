@@ -4,8 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
   schedule:
-    - cron: '1 0 * * 0'  # Run daily at midnight UTC
+    - cron: '1 0 * * 0'  # Run weekly on Sunday at 00:01 UTC
+
+permissions:
+  contents: write
 
 jobs:
   generate-data:
@@ -21,12 +25,16 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
 
     - name: Install dependencies
-      run: npm install axios
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
 
     - name: Generate data
-      run: node generate-data.js
+      run: npm run generate
 
     - name: Commit and push changes
       run: |

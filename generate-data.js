@@ -1,25 +1,36 @@
-import { post } from "axios";
+import axios from "axios";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
-async function fetchTimetables(subDomain) {
+const { post } = axios;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export async function fetchTimetables(subDomain) {
 	const url = `https://${subDomain}.edupage.org/timetable/server/ttviewer.js?__func=getTTViewerData`;
-
 	const body = {
 		__args: [null, new Date().getFullYear()],
 		__gsh: "00000000",
 	};
 
 	try {
-		const response = await post(url, body, {
+		const response = await fetch(url, {
+			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 				"Accept": "*/*",
 				"X-Requested-With": "XMLHttpRequest",
-				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-			}
+				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+			},
+			body: JSON.stringify(body)
 		});
-		return response.data;
+
+		if (!response.ok) {
+			throw new Error(`Request failed with status ${response.status}`);
+		}
+
+		return await response.json();
 	} catch (err) {
 		console.error("fetchTimetables failed:", err);
 		throw err;
@@ -40,7 +51,7 @@ async function fetchTimetableByID(timeTableID) {
 				"Content-Type": "application/json",
 				"Accept": "*/*",
 				"X-Requested-With": "XMLHttpRequest",
-				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
 			}
 		});
 		return response.data;
@@ -192,4 +203,6 @@ async function main() {
 	}
 }
 
-main();
+if (process.argv[1] === __filename) {
+	main();
+}
